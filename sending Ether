@@ -1,0 +1,39 @@
+// Import the required libraries
+const Web3 = require('web3');
+const EthereumTx = require('ethereumjs-tx').Transaction;
+
+// Connect to a local Ethereum node
+const web3 = new Web3('http://localhost:7545'); // Change to your local node's address and port
+
+// Define the sender and receiver addresses
+const sender = '0xabc...'; // Replace with the sender's address
+const receiver = '0xdef...'; // Replace with the receiver's address
+
+// Define the private key of the sender
+const privateKey = Buffer.from(
+  'YOUR_PRIVATE_KEY', // Replace with the sender's private key
+  'hex',
+);
+
+// Define the details of the transaction
+const transaction = {
+  nonce: web3.utils.toHex(await web3.eth.getTransactionCount(sender)),
+  to: receiver,
+  value: web3.utils.toHex(web3.utils.toWei('1', 'ether')), // Sending 1 Ether
+  gasLimit: web3.utils.toHex(21000), // The gas limit for standard transactions
+  gasPrice: web3.utils.toHex(await web3.eth.getGasPrice()),
+};
+
+// Sign the transaction
+const tx = new EthereumTx(transaction);
+tx.sign(privateKey);
+
+// Serialize the transaction and convert it to raw format
+const rawTx = '0x' + tx.serialize().toString('hex');
+
+// Send the transaction
+web3.eth.sendSignedTransaction(rawTx)
+  .on('transactionHash', (hash) => console.log('Transaction hash:', hash))
+  .on('confirmation', (confirmationNumber, receipt) => console.log('Confirmation number:', confirmationNumber))
+  .on('receipt', (receipt) => console.log('Receipt:', receipt))
+  .on('error', (error) => console.error('An error occurred:', error));
